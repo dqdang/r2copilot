@@ -8,5 +8,6 @@ dependencies = [
     "github-copilot-sdk>=0.1.23",
     "langchain-community>=0.4.1",
     "langchain-core>=1.2.11",
+    "r2pipe>=1.9.8",
     "streamlit[starlette]>=1.54.0",
 ]

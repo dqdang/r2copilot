@@ -1443,6 +1443,7 @@ dependencies = [
     { name = "github-copilot-sdk" },
     { name = "langchain-community" },
     { name = "langchain-core" },
+    { name = "r2pipe" },
     { name = "streamlit", extra = ["starlette"] },
 ]
 
@@ -1451,8 +1452,15 @@ requires-dist = [
     { name = "github-copilot-sdk", specifier = ">=0.1.23" },
     { name = "langchain-community", specifier = ">=0.4.1" },
     { name = "langchain-core", specifier = ">=1.2.11" },
+    { name = "r2pipe", specifier = ">=1.9.8" },
     { name = "streamlit", extras = ["starlette"], specifier = ">=1.54.0" },
 ]
+
+[[package]]
+name = "r2pipe"
+version = "1.9.8"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/00/68/1bd2e0d709f3b0d8e112f143797c92074e8b76ad6c1fb44e05420e085e4e/r2pipe-1.9.8.tar.gz", hash = "sha256:87ac3a69cd6466e330364bb47995bf49c2a87aadaf6497b9cd7fdd9dcf24c1df", size = 23828, upload-time = "2026-03-09T19:50:37.928Z" }
 
 [[package]]
 name = "referencing"

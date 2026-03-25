@@ -7,6 +7,7 @@ from langchain_community.utilities import SQLDatabase
 
 import asyncio
 import os
+import r2pipe
 import socket
 import streamlit as st
 import tempfile
@@ -53,19 +54,69 @@ async def stop_llm(llm, session):
     await session.destroy()
     await llm.stop()
 
+async def extract_file(llm, session, question):
+    query_template =  """
+    From the user's question, find the provided path and return it.
+    Question: {question}
+    """
+    prompt = query_template.format(question=question)
+
+    done = asyncio.Event()
+    response = []
+
+    def on_event(event):
+        if event.type.value == "assistant.message_delta":
+            # Streaming message chunk
+            delta = event.data.delta_content or ""
+        elif event.type.value == "assistant.reasoning_delta":
+            # Streaming reasoning chunk (if model supports reasoning)
+            delta = event.data.delta_content or ""
+        elif event.type.value == "assistant.message":
+            # Final message - complete content
+            response.append(event.data.content)
+        elif event.type.value == "assistant.reasoning":
+            # Final reasoning content (if model supports reasoning)
+            pass
+        elif event.type.value == "session.idle":
+            # Session finished processing
+            done.set()
+
+    unsubscribe = session.on(on_event)
+    await session.send({"prompt": prompt})
+    await done.wait()
+    unsubscribe()
+
+    return response[0] if response else ""
+
+def run_r2pipe(extracted_file):
+    response = ""
+    extracted_file = extracted_file.split("[")[1][:-1]
+    r2 = r2pipe.open(extracted_file, radare2home=r"C:\git\radare2-6.0.8-w64\bin")
+    r2.cmd('aa')
+    response += r2.cmd("afl")
+    response += str(r2.cmdj("aflj")[0])            # evaluates JSONs and returns an object
+    response += " " + r2.cmdj("ij")['core']['format']    # shows file format
+    r2.quit()
+    return response
+
 async def answer_question(question, history):
     llm, session = await create_llm()
     prompt_template =  """
     Answer the following query. Take history into consideration.
     Question: {question}
     History: {history}
+    Provide the answer in between brackets and the following format:
+    The answer is:
+    [answer]
     """
     prompt = prompt_template.format(question=question, history=history)
 
     response = await session.send_and_wait({"prompt": prompt}, timeout=120)
+    extracted_file = await extract_file(llm, session, question)
+    result = run_r2pipe(extracted_file)
 
     await stop_llm(llm, session)
-    return response.data.content
+    return result
 
 def main():
     st.set_page_config(
